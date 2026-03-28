@@ -1,5 +1,5 @@
 ---
-bible-verse-memory: minor
+bible-verse-memory: major
 ---
 
 Initial release of Bible Verse Memory (`bvm`), a terminal UI for managing Bible memory verses with spaced repetition.
