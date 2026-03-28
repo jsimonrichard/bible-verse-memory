@@ -1,0 +1,28 @@
+[package]
+name = "bible-verse-memory"
+version = "0.1.0"
+description = "A TUI for managing Bible memory verses with spaced repetition"
+authors = ["J. Simon Richard <jsimonrichard@gmail.com>"]
+license = "MIT"
+edition = "2024"
+
+[[bin]]
+name = "bvm"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4.44", features = ["serde"] }
+clap = { version = "4.5", features = ["derive"] }
+color-eyre = "0.6.5"
+crossterm = "0.29.0"
+dirs = "6.0.0"
+ratatui = "0.30.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_yaml = "0.9.34"
+unicode-width = "0.2"
+
+[profile.release]
+lto = true
+opt-level = "s"
+strip = true
+codegen-units = 1
