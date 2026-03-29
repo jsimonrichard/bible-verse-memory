@@ -1,7 +1,21 @@
 [package]
 versioned_files = ["Cargo.toml", "Cargo.lock"]
 changelog = "CHANGELOG.md"
-assets = "marker"
+assets = "artifacts/*"
+
+[[workflows]]
+name = "prepare-release"
+
+[[workflows.steps]]
+type = "PrepareRelease"
+
+[[workflows.steps]]
+type = "Command"
+command = "git commit -m \"chore: prepare release $version\""
+
+[[workflows.steps]]
+type = "Command"
+command = "git push"
 
 [[workflows]]
 name = "document-change"
@@ -13,5 +27,8 @@ type = "CreateChangeFile"
 owner = "jsimonrichard"
 repo = "bible-verse-memory"
 
-[bot.releases]
-enabled = true
+[[workflows]]
+name = "release"
+
+[[workflows.steps]]
+type = "Release"

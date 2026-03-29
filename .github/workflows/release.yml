@@ -1,29 +1,36 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  get-tag:
-    if: (github.head_ref == 'knope/release' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
+  prepare-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - name: Get tag of draft release
-        run: echo "tag_name=$(gh release list --repo ${{ github.repository }} --json 'isDraft,tagName' --jq '.[] | select(.isDraft) | .tagName')" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ github.token }}
-        id: get-tag
     outputs:
-      tag_name: ${{ steps.get-tag.outputs.tag_name }}
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Install Knope
+        uses: knope-dev/action@v2
+      - name: Update versioned files and changelog
+        run: knope prepare-release --verbose
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Store commit SHA
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
   build-artifacts:
-    needs: [get-tag]
-    if: needs.get-tag.outputs.tag_name != ''
+    needs: [prepare-release]
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +51,8 @@ jobs:
     name: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.sha }}
       - uses: Swatinem/rust-cache@v2
       - name: Install host target
         run: rustup target add ${{ matrix.target }}
@@ -77,21 +86,22 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build-artifacts, get-tag]
+    needs: [build-artifacts, prepare-release]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.sha }}
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
-      - name: Upload artifacts and publish release
-        run: |
-          cd artifacts
-          gh release upload ${{ needs.get-tag.outputs.tag_name }} *
-          gh release edit ${{ needs.get-tag.outputs.tag_name }} --draft=false --latest
+      - name: Install Knope
+        uses: knope-dev/action@v2
+      - name: Create GitHub release and upload artifacts
+        run: knope release --verbose
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
