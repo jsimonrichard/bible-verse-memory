@@ -1,8 +1,8 @@
-## 0.1.0 (2026-03-29)
+---
+bible-verse-memory: major
+---
 
-### Breaking Changes
-
-#### Initial release of Bible Verse Memory (`bvm`), a terminal UI for managing Bible memory verses with spaced repetition.
+Initial release of Bible Verse Memory (`bvm`), a terminal UI for managing Bible memory verses with spaced repetition.
 
 - **Dashboard**: View all verses with status, level, next review date, and review count
 - **Add/Edit verses**: Full text input with word-level wrapping, clipboard paste support (bracketed paste), and keyboard shortcuts (Ctrl+Left/Right for word navigation, Ctrl+U to delete to line start)
