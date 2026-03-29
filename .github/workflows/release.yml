@@ -1,36 +1,13 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 jobs:
-  prepare-release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      sha: ${{ steps.commit.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.ref_name }}
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Install Knope
-        uses: knope-dev/action@v2
-      - name: Update versioned files and changelog
-        run: knope prepare-release --verbose
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: Store commit SHA
-        id: commit
-        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-
   build-artifacts:
-    needs: [prepare-release]
+    if: github.head_ref == 'release' && github.event.pull_request.merged == true
     strategy:
       fail-fast: false
       matrix:
@@ -51,8 +28,6 @@ jobs:
     name: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.prepare-release.outputs.sha }}
       - uses: Swatinem/rust-cache@v2
       - name: Install host target
         run: rustup target add ${{ matrix.target }}
@@ -86,20 +61,20 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build-artifacts, prepare-release]
+    needs: [build-artifacts]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.sha }}
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
       - name: Install Knope
-        uses: knope-dev/action@v2
+        uses: knope-dev/action@v2.1.2
       - name: Create GitHub release and upload artifacts
         run: knope release --verbose
         env:
