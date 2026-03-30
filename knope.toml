@@ -1,4 +1,4 @@
-[packages.bible-verse-memory]
+[package]
 versioned_files = ["Cargo.toml", "Cargo.lock"]
 changelog = "CHANGELOG.md"
 assets = "artifacts/*"
