@@ -1,6 +1,6 @@
 [package]
 name = "bible-verse-memory"
-version = "0.0.0"
+version = "0.1.0"
 description = "A TUI for managing Bible memory verses with spaced repetition"
 authors = ["J. Simon Richard <jsimonrichard@gmail.com>"]
 license = "MIT"
